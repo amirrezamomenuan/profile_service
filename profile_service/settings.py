@@ -3,6 +3,8 @@ from pathlib import Path
 
 from decouple import config, Csv
 
+from .configs import CAR_COLORS, CAR_MODELS
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
