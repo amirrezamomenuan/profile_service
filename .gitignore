@@ -21,3 +21,6 @@ logs
 # Environments
 venv/
 .env
+
+# Project
+config_*.txt
