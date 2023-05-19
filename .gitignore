@@ -1,0 +1,23 @@
+# pycharm
+.idea
+.project
+.pydevproject
+*.mo
+
+
+# python
+**/*.pyc
+__pycache__/
+*.py[cod]
+
+# Django stuff:
+*.log
+logs
+
+# media and static
+/uploads
+/static
+
+# Environments
+venv/
+.env
