@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 
 class Car(models.Model):
-    plate_number = models.CharField(verbose_name=_('plate number'), max_length=16)
+    plate_number = models.CharField(verbose_name=_('plate number'), max_length=16, unique=True)
     model = models.CharField(verbose_name=_('model'), max_length=64)
     color = models.CharField(verbose_name=_('color'), max_length=16)
 
