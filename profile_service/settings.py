@@ -10,6 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = config('SECRET_KEY')
+JWT_AUTHENTICATION_KEY = config('JWT_AUTHENTICATION_KEY')
+JWT_AUTHENTICATION_ALGORITHMS = config('JWT_AUTHENTICATION_ALGORITHMS', cast=Csv())
 
 DEBUG = config('DEBUG', cast=bool)
 
@@ -89,6 +91,12 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'profile_service.authentication.JWTAuthentication',
+    ]
+}
 
 
 LANGUAGE_CODE = 'en-us'
