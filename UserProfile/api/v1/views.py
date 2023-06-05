@@ -62,7 +62,7 @@ class UserAddressView(ViewSet):
                 data={'message': _('address that you want to modify is not found')}
             )
 
-        address_serializer = AddressSerializer(data=request.data, instance=address)
+        address_serializer = AddressSerializer(instance=address, data=request.data, partial=True)
 
         if address_serializer.is_valid():
             address_serializer.save()
