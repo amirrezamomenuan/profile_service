@@ -5,6 +5,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+from .utils import avatar_upload_path
+
 
 class ProfileType(Enum):
     User = 1
@@ -87,7 +89,7 @@ class Profile(models.Model):
     first_name = models.CharField(_('first name'), max_length=32)
     last_name = models.CharField(_('last name'), max_length=32)
     user_id = models.PositiveIntegerField(_('user id'), unique=True)
-    avatar = models.ImageField(_('driver avatar'), blank=True)
+    avatar = models.ImageField(_('driver avatar'), upload_to=avatar_upload_path, blank=True)
     phone_number = models.CharField(_('phone number'), max_length=16, unique=True)
     national_id = models.CharField(_('national id'), max_length=16, unique=True, null=True, blank=True)
     is_confirmed = models.BooleanField(_('is confirmed'), default=False)

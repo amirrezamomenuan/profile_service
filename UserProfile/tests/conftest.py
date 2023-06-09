@@ -11,15 +11,18 @@ def profile_factory(image_file):
     def _factory(user_id: int, profile_type: ProfileType):
         if profile_type == ProfileType.User:
             _profile = Profile(
+                profile_type=profile_type.value,
                 first_name='reza',
                 last_name='eivazzadeh',
                 user_id=user_id,
-                phone_number='09024066963'
+                phone_number='09024066963',
+                avatar=image_file
             )
             _profile.save()
             return _profile
         else:
             _profile = Profile(
+                profile_type=profile_type.value,
                 first_name='reza',
                 last_name='eivazzadeh',
                 user_id=user_id,
