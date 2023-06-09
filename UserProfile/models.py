@@ -15,6 +15,9 @@ class Car(models.Model):
     plate_number = models.CharField(_('plate number'), max_length=16, unique=True)
     model = models.CharField(_('model'), max_length=64)
     color = models.CharField(_('color'), max_length=16)
+    owner = models.OneToOneField(
+        verbose_name=_('owner'), to='Profile', null=False, blank=True, on_delete=models.CASCADE
+    )
 
     def clean_model(self, value):
         if value not in settings.CAR_MODELS:
@@ -75,36 +78,37 @@ class Address(models.Model):
         verbose_name_plural = 'addresses'
 
 
-class DriverProfile(models.Model):
-    first_name = models.CharField(_('first name'), max_length=32)
-    last_name = models.CharField(_('last name'), max_length=32)
-    user_id = models.PositiveIntegerField(_('user id'), unique=True)
-    avatar = models.ImageField(_('driver avatar'))
-    phone_number = models.CharField(_('phone number'), max_length=16, unique=True)
-    car = models.OneToOneField(to=Car, on_delete=models.PROTECT, related_name='driver')
-    address = models.OneToOneField(to=Address, on_delete=models.PROTECT)
-    national_id = models.CharField(_('national id'), max_length=16, unique=True)
-    is_confirmed = models.BooleanField(_('is confirmed'), default=False)
-    register_date = models.DateTimeField(_('register date'), auto_now_add=True)
-    modification_date = models.DateTimeField(_('modification date'), auto_now=True)
-
-    class Meta:
-        db_table = 'driver_profile'
-        verbose_name = 'driver_profile'
-        verbose_name_plural = 'driver_profiles'
-
-
 class Profile(models.Model):
+    profile_type = models.SmallIntegerField(
+        _('profile type'),
+        choices=[(option.value, option.name) for option in ProfileType],
+        default=ProfileType.User.value
+    )
     first_name = models.CharField(_('first name'), max_length=32)
     last_name = models.CharField(_('last name'), max_length=32)
     user_id = models.PositiveIntegerField(_('user id'), unique=True)
     avatar = models.ImageField(_('driver avatar'), blank=True)
     phone_number = models.CharField(_('phone number'), max_length=16, unique=True)
-    national_id = models.CharField(_('national id'), max_length=16, unique=True, null=True)
+    national_id = models.CharField(_('national id'), max_length=16, unique=True, null=True, blank=True)
+    is_confirmed = models.BooleanField(_('is confirmed'), default=False)
     register_date = models.DateTimeField(_('register date'), auto_now_add=True)
     modification_date = models.DateTimeField(_('modification date'), auto_now=True)
 
     class Meta:
-        db_table = 'user_profile'
-        verbose_name = 'user_profile'
-        verbose_name_plural = 'user_profiles'
+        db_table = 'profile'
+        verbose_name = 'profile'
+        verbose_name_plural = 'profiles'
+
+    def clean(self):
+        if self.profile_type == ProfileType.Driver:
+            if not self.avatar:
+                raise ValidationError(_('profile avatar cannot be empty'))
+            if not self.national_id:
+                raise ValidationError(_('national_id cannot be empty'))
+
+    def save(self, *args, **kwargs):
+        if self.profile_type == ProfileType.User:
+            self.is_confirmed = True
+
+        self.full_clean()
+        super().save(*args, **kwargs)

@@ -7,7 +7,7 @@ pytestmark = pytest.mark.django_db
 
 
 @pytest.fixture
-def profile_factory():
+def profile_factory(image_file):
     def _factory(user_id: int, profile_type: ProfileType):
         if profile_type == ProfileType.User:
             _profile = Profile(
@@ -15,6 +15,18 @@ def profile_factory():
                 last_name='eivazzadeh',
                 user_id=user_id,
                 phone_number='09024066963'
+            )
+            _profile.save()
+            return _profile
+        else:
+            _profile = Profile(
+                first_name='reza',
+                last_name='eivazzadeh',
+                user_id=user_id,
+                phone_number='09024066963',
+                national_id='0123456789',
+                avatar=image_file,
+                is_confirmed=True
             )
             _profile.save()
             return _profile

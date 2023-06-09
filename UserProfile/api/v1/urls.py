@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     UserAddressView,
+    DriverAddressView
 )
 
 
@@ -18,4 +19,5 @@ urlpatterns = [
         UserAddressView.as_view({'delete': 'remove_address'}),
         name='user_delete_address_view'
     ),
+    path('driver/address/', DriverAddressView.as_view(), name='driver_address_view'),
 ]

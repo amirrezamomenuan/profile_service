@@ -1,10 +1,12 @@
 from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 from rest_framework.viewsets import ViewSet
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
-from UserProfile.models import Address, Profile
+from UserProfile.models import Address, Profile, ProfileType
 from .serializers import AddressListSerializer, AddressSerializer
 
 
@@ -92,3 +94,51 @@ class UserAddressView(ViewSet):
             return Response(
                 status=status.HTTP_204_NO_CONTENT
             )
+
+
+class DriverAddressView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request):
+        try:
+            address = Address.objects.get(
+                owner__user_id=request.user.id,
+            )
+        except Address.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': _('address not found')}
+            )
+        address_data = AddressListSerializer(address, many=False).data
+
+        return Response(data=address_data)
+
+    def put(self, request):
+        try:
+            address = Address.objects.select_related(
+                'owner'
+            ).get(
+                owner__user_id=request.user.id,
+            )
+        except Address.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': _('address not found')}
+            )
+
+        address_serializer = AddressSerializer(instance=address, data=request.data, partial=True)
+
+        if address_serializer.is_valid():
+            with transaction.atomic():
+                address_serializer.save()
+                address.owner.is_confirmed = False
+                address.owner.save()
+            # TODO: add cache deletion
+            return Response(
+                status=status.HTTP_200_OK,
+                data={'message': _('address edited, waiting for confirmation')}
+            )
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST,
+            data={'message': _('invalid data')}
+        )

@@ -178,3 +178,102 @@ class TestDeletingUserAddress:
         address = address_factory(user_profile, 'west-side block1 no2')
         response = authenticated_client.delete(self.__url(address_id=address.id))
         assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+class TestGettingDriverAddress:
+    @staticmethod
+    def __url():
+        return reverse('driver_address_view')
+
+    def test_when_user_is_not_authenticated(self, client):
+        response = client.get(self.__url())
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_getting_address_when_user_does_not_have_a_profile(
+            self,
+            authenticated_client
+    ):
+        response = authenticated_client.get(self.__url())
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_only_address_that_belong_to_user_is_returned(
+            self,
+            authenticated_client,
+            profile_factory,
+            address_factory
+    ):
+        user_profile = profile_factory(user_id=1378, profile_type=ProfileType.Driver)
+        address = address_factory(user_profile, 'west-side block1 no2')
+
+        response = authenticated_client.get(self.__url())
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json().get('address') == address.address
+        assert response.json().get('city') == address.city.name
+
+
+class TestEditingDriverAddress:
+    @staticmethod
+    def __url():
+        return reverse('driver_address_view')
+
+    def test_when_user_is_not_authenticated(self, client):
+        response = client.put(self.__url())
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_editing_address_that_does_not_exist_or_belong_to_driver(
+            self,
+            authenticated_client,
+    ):
+        objects_mock = mock.Mock()
+        objects_mock.select_related.return_value = objects_mock
+        objects_mock.get.side_effect = Address.DoesNotExist()
+
+        with mock.patch('UserProfile.api.v1.views.Address.objects', objects_mock):
+            response = authenticated_client.put(self.__url())
+            assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    @mock.patch('UserProfile.api.v1.views.AddressSerializer.is_valid')
+    def test_if_serializer_is_not_valid(
+            self,
+            address_serializer_mock,
+            authenticated_client,
+            address_factory,
+            profile_factory,
+    ):
+        driver_profile = profile_factory(user_id=1378, profile_type=ProfileType.Driver)
+        address = address_factory(driver_profile, 'west side, tupac mansion')
+
+        address_serializer_mock.return_value = False
+        objects_mock = mock.Mock()
+        objects_mock.select_related.return_value = objects_mock
+        objects_mock.get.return_value = address
+
+        with mock.patch('UserProfile.api.v1.views.Address.objects', objects_mock):
+            response = authenticated_client.put(self.__url())
+            assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    @mock.patch.object(AddressSerializer, 'is_valid')
+    @mock.patch.object(AddressSerializer, 'save')
+    def test_driver_profile_after_editing_address_successfully(
+            self,
+            address_serializer_save_mock,
+            address_serializer_is_valid_mock,
+            authenticated_client,
+            profile_factory,
+            address_factory
+    ):
+        driver_profile = profile_factory(user_id=1378, profile_type=ProfileType.Driver)
+        address = address_factory(driver_profile, 'west side, tupac mansion')
+
+        objects_mock = mock.Mock()
+        objects_mock.select_related.return_value = objects_mock
+        objects_mock.get.return_value = address
+
+        address_serializer_is_valid_mock.return_value = True
+
+        with mock.patch('UserProfile.api.v1.views.Address.objects', objects_mock):
+            response = authenticated_client.put(self.__url())
+
+            assert response.status_code == status.HTTP_200_OK
+            address_serializer_save_mock.assert_called_once()
+            assert not driver_profile.is_confirmed
