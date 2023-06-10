@@ -31,3 +31,9 @@ class AddressSerializer(serializers.ModelSerializer):
             owner_id = self.context.get('owner_id')
             data['owner'] = owner_id
         return super().to_internal_value(data)
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['first_name', 'last_name']

@@ -7,7 +7,8 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
 from UserProfile.models import Address, Profile, ProfileType
-from .serializers import AddressListSerializer, AddressSerializer
+from .serializers import AddressListSerializer, AddressSerializer, ProfileSerializer
+from .forms import ProfileForm
 
 
 class UserAddressView(ViewSet):
@@ -141,4 +142,158 @@ class DriverAddressView(APIView):
         return Response(
             status=status.HTTP_400_BAD_REQUEST,
             data={'message': _('invalid data')}
+        )
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request):
+        try:
+            user_profile = Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.User.value
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': _('profile not found')}
+            )
+
+        profile_data = ProfileSerializer(user_profile, many=False).data
+        return Response(data=profile_data)
+
+    def post(self, request):
+        profile_form = ProfileForm(data=request.GET)
+
+        if profile_form.is_valid():
+            profile_form.save()
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={'message': _('profile created successfully')}
+            )
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('invalid data')}
+            )
+
+    def put(self, request):
+        try:
+            user_profile = Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.User.value
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('profile not found')}
+            )
+
+        profile_form = ProfileForm(data=request.GET, instance=user_profile, partial=True)
+
+        if profile_form.is_valid():
+            profile_form.save()
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={'message': _('profile created successfully')}
+            )
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('invalid data')}
+            )
+
+    def delete(self, request):
+        try:
+            Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.User.value
+            ).delete()
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('profile not found')}
+            )
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+            data={'message': _('profile deleted successfully')}
+        )
+
+
+class DriverProfileView(APIView):
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request):
+        try:
+            driver_profile = Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.User.value
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_404_NOT_FOUND,
+                data={'message': _('profile not found')}
+            )
+
+        profile_data = ProfileSerializer(driver_profile, many=False).data
+        return Response(data=profile_data)
+
+    def post(self, request):
+        profile_form = ProfileForm(data=request.GET)
+
+        if profile_form.is_valid():
+            profile_form.save()
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={'message': _('profile created successfully')}
+            )
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('invalid data')}
+            )
+
+    def put(self, request):
+        try:
+            driver_profile = Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.Driver.value
+            )
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('profile not found')}
+            )
+
+        profile_form = ProfileForm(data=request.GET, instance=driver_profile, partial=True)
+
+        if profile_form.is_valid():
+            profile_form.save()
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data={'message': _('profile created successfully')}
+            )
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('invalid data')}
+            )
+
+    def delete(self, request):
+        try:
+            Profile.objects.get(
+                user_id=request.user.id,
+                profile_type=ProfileType.Driver.value
+            ).delete()
+        except Profile.DoesNotExist:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'message': _('profile not found')}
+            )
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
+            data={'message': _('profile deleted successfully')}
         )

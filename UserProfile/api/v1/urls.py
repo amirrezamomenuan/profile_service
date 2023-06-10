@@ -2,7 +2,9 @@ from django.urls import path
 
 from .views import (
     UserAddressView,
-    DriverAddressView
+    DriverAddressView,
+    UserProfileView,
+    DriverProfileView,
 )
 
 
@@ -20,4 +22,6 @@ urlpatterns = [
         name='user_delete_address_view'
     ),
     path('driver/address/', DriverAddressView.as_view(), name='driver_address_view'),
+    path('profile/', UserProfileView.as_view(), name='user_profile_view'),
+    path('driver/profile/', DriverProfileView.as_view(), name='driver_profile_view'),
 ]
