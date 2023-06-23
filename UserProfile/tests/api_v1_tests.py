@@ -277,3 +277,117 @@ class TestEditingDriverAddress:
             assert response.status_code == status.HTTP_200_OK
             address_serializer_save_mock.assert_called_once()
             assert not driver_profile.is_confirmed
+
+
+class TestUserProfileView:
+    @property
+    def __url(self):
+        return reverse('user_profile_view')
+
+    @pytest.mark.parametrize(
+        'http_method', ['get', 'post', 'put', 'delete']
+    )
+    def test_unauthorized_request(self, http_method, client):
+        assert getattr(client, http_method)(self.__url).status_code == status.HTTP_403_FORBIDDEN
+
+    def test_getting_profile_when_user_does_not_have_a_profile(self, authenticated_client):
+        assert False
+
+    def test_getting_profile_detail_when_user_has_profile(self, authenticated_client):
+        assert False
+
+    @pytest.mark.parametrize(
+        'is_valid, expected_status_code', [
+            (True, status.HTTP_201_CREATED),
+            (False, status.HTTP_400_BAD_REQUEST)
+        ]
+    )
+    def test_creating_user_profile_with_different_form_validation_statuses(
+            self,
+            is_valid,
+            expected_status_code,
+            authenticated_client
+    ):
+        assert False
+
+    def test_updating_user_profile_when_profile_does_not_exist(self):
+        assert False
+
+    @pytest.mark.parametrize(
+        'is_valid, expected_status_code', [
+            (True, status.HTTP_200_OK),
+            (False, status.HTTP_400_BAD_REQUEST),
+        ]
+    )
+    def test_updating_user_profile_with_different_form_validation_statuses(
+            self,
+            is_valid,
+            expected_status_code,
+            authenticated_clients
+    ):
+        assert False
+
+    def test_deleting_user_profile_successfully(self):
+        assert False
+
+    def test_deleting_user_profile_when_it_does_not_exist(self):
+        assert False
+
+
+class TestDriverProfileView:
+    @property
+    def __url(self):
+        return reverse('driver_profile_view')
+
+    @pytest.mark.parametrize(
+        'http_method', ['get', 'post', 'put', 'delete']
+    )
+    def test_unauthorized_request(self, http_method, client):
+        assert getattr(client, http_method)(self.__url).status_code == status.HTTP_403_FORBIDDEN
+
+    def test_getting_profile_detail_when_it_does_not_exist(self):
+        assert False
+
+    def test_getting_profile_data_is_successful(self):
+        assert False
+
+    @pytest.mark.parametrize(
+        'is_valid, expected_status_code', [
+            (True, status.HTTP_201_CREATED),
+            (False, status.HTTP_400_BAD_REQUEST),
+        ]
+    )
+    def test_creating_profile_with_different_form_validations(
+            self,
+            is_valid,
+            expected_status_code,
+            authenticated_client
+    ):
+        assert False
+
+    def test_updating_driver_profile_when_profile_does_not_exist(self):
+        assert False
+
+    @pytest.mark.parametrize(
+        'is_valid, expected_status_code', [
+            (True, status.HTTP_202_ACCEPTED),
+            (False, status.HTTP_400_BAD_REQUEST)
+        ]
+    )
+    def test_updating_driver_profile_with_different_form_validations(
+            self,
+            is_valid,
+            expected_status_code,
+            authenticated_client
+    ):
+        assert False
+
+    def test_driver_profile_status_is_changed_to_unavailable_after_modification(self):
+        assert False
+
+    def test_deleting_driver_profile_when_it_does_not_exist(self):
+        assert False
+
+    def test_deleting_driver_profile_successfully(self):
+        assert False
+
