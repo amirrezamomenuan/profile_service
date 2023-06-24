@@ -4,7 +4,7 @@ import pytest
 from django.urls import reverse
 from rest_framework import status
 
-from UserProfile.models import ProfileType, Address
+from UserProfile.models import ProfileType, Address, Profile
 from UserProfile.api.v1.serializers import AddressSerializer
 
 pytestmark = pytest.mark.django_db
@@ -290,11 +290,40 @@ class TestUserProfileView:
     def test_unauthorized_request(self, http_method, client):
         assert getattr(client, http_method)(self.__url).status_code == status.HTTP_403_FORBIDDEN
 
-    def test_getting_profile_when_user_does_not_have_a_profile(self, authenticated_client):
-        assert False
+    @pytest.mark.parametrize(
+        'profile_exists, expected_status_code', [
+            (True, status.HTTP_200_OK),
+            (False, status.HTTP_404_NOT_FOUND)
+        ]
+    )
+    def test_getting_user_profile(
+            self,
+            profile_exists,
+            expected_status_code,
+            profile_factory,
+            authenticated_client
+    ):
+        with mock.patch('UserProfile.api.v1.views.Profile.objects.get') as profile_mock:
+            if profile_exists:
+                profile_mock.return_value = profile_factory(1378, ProfileType.User)
+            else:
+                profile_mock.side_effect = Profile.DoesNotExist()
 
-    def test_getting_profile_detail_when_user_has_profile(self, authenticated_client):
-        assert False
+            response = authenticated_client.get(self.__url)
+            assert response.status_code == expected_status_code
+
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.filter')
+    def test_creating_user_profile_when_user_already_has_profile(
+            self,
+            profile_model_mock,
+            authenticated_client
+    ):
+        profile_objects_mock = mock.Mock()
+        profile_objects_mock.exists.return_value = True
+
+        profile_model_mock.return_value = profile_objects_mock
+        response = authenticated_client.post(self.__url)
+        assert response.status_code == status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS
 
     @pytest.mark.parametrize(
         'is_valid, expected_status_code', [
@@ -302,13 +331,32 @@ class TestUserProfileView:
             (False, status.HTTP_400_BAD_REQUEST)
         ]
     )
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.filter')
+    @mock.patch('UserProfile.api.v1.views.ProfileForm')
     def test_creating_user_profile_with_different_form_validation_statuses(
             self,
+            profile_form_mock,
+            profile_model_mock,
             is_valid,
             expected_status_code,
             authenticated_client
     ):
-        assert False
+        profile_objects_mock = mock.Mock()
+        profile_objects_mock.exists.return_value = False
+        profile_model_mock.return_value = profile_objects_mock
+
+        form_mock = mock.Mock()
+        form_mock.is_valid.return_value = is_valid
+        form_mock.save.return_value = None
+        profile_form_mock.return_value = form_mock
+
+        response = authenticated_client.post(self.__url, data={'some': 'data'})
+        assert response.status_code == expected_status_code
+
+        if is_valid:
+            form_mock.save.assert_called_once()
+        else:
+            form_mock.save.assert_not_called()
 
     def test_updating_user_profile_when_profile_does_not_exist(self):
         assert False
@@ -323,7 +371,7 @@ class TestUserProfileView:
             self,
             is_valid,
             expected_status_code,
-            authenticated_clients
+            authenticated_client
     ):
         assert False
 

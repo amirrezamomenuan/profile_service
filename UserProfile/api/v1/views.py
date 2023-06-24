@@ -164,6 +164,12 @@ class UserProfileView(APIView):
         return Response(data=profile_data)
 
     def post(self, request):
+        if Profile.objects.filter(user_id=request.user.id, profile_type=ProfileType.User.value).exists():
+            return Response(
+                status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS,
+                data={'message': _('you already have a profile')}
+            )
+
         profile_form = ProfileForm(data=request.GET)
 
         if profile_form.is_valid():
