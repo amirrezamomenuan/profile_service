@@ -192,7 +192,7 @@ class UserProfileView(APIView):
             )
         except Profile.DoesNotExist:
             return Response(
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
                 data={'message': _('profile not found')}
             )
 
@@ -201,7 +201,7 @@ class UserProfileView(APIView):
         if profile_form.is_valid():
             profile_form.save()
             return Response(
-                status=status.HTTP_201_CREATED,
+                status=status.HTTP_202_ACCEPTED,
                 data={'message': _('profile created successfully')}
             )
         else:

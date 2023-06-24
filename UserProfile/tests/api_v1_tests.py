@@ -358,28 +358,59 @@ class TestUserProfileView:
         else:
             form_mock.save.assert_not_called()
 
-    def test_updating_user_profile_when_profile_does_not_exist(self):
-        assert False
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.get')
+    def test_updating_user_profile_when_profile_does_not_exist(
+            self,
+            profile_model_mock,
+            authenticated_client
+    ):
+        profile_model_mock.side_effect = Profile.DoesNotExist()
+        response = authenticated_client.put(self.__url, data={'some': 'data'})
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @pytest.mark.parametrize(
         'is_valid, expected_status_code', [
-            (True, status.HTTP_200_OK),
+            (True, status.HTTP_202_ACCEPTED),
             (False, status.HTTP_400_BAD_REQUEST),
         ]
     )
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.get')
+    @mock.patch('UserProfile.api.v1.views.ProfileForm')
     def test_updating_user_profile_with_different_form_validation_statuses(
             self,
+            profile_form_mock,
+            profile_model_mock,
             is_valid,
             expected_status_code,
-            authenticated_client
+            authenticated_client,
+            profile_factory
     ):
-        assert False
+        profile_model_mock.return_value = profile_factory(1378, ProfileType.User)
 
-    def test_deleting_user_profile_successfully(self):
-        assert False
+        form_mock = mock.Mock()
+        form_mock.is_valid.return_value = is_valid
+        form_mock.save.return_value = None
+        profile_form_mock.return_value = form_mock
 
-    def test_deleting_user_profile_when_it_does_not_exist(self):
-        assert False
+        response = authenticated_client.put(self.__url, data={'some': 'data'})
+        assert response.status_code == expected_status_code
+
+        if is_valid:
+            form_mock.save.assert_called_once()
+        else:
+            form_mock.save.assert_not_called()
+
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.get')
+    def test_deleting_user_profile_when_it_does_not_exist(self, profile_model_mock, authenticated_client):
+        profile_model_mock.side_effect = Profile.DoesNotExist()
+        response = authenticated_client.delete(self.__url)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    @mock.patch('UserProfile.api.v1.views.Profile.objects.get')
+    def test_deleting_user_profile_successfully(self, profile_model_mock, authenticated_client, profile_factory):
+        profile_model_mock.return_value = profile_factory(1378, ProfileType.User)
+        response = authenticated_client.delete(self.__url)
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 class TestDriverProfileView:
